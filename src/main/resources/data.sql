@@ -18,3 +18,7 @@ INSERT INTO product (name, price, description, manufactureDate) VALUES ('LED Des
 INSERT INTO product (name, price, description, manufactureDate) VALUES ('Wireless Mouse', 34.99, 'Ergonomic wireless mouse with precision tracking and long battery life', '2024-02-28');
 INSERT INTO product (name, price, description, manufactureDate) VALUES ('Bluetooth Speaker', 64.99, 'Portable waterproof speaker with 360-degree sound and 12-hour battery', '2024-01-18');
 INSERT INTO product (name, price, description, manufactureDate) VALUES ('USB-C Hub', 54.99, '7-in-1 USB-C hub with HDMI, USB ports, and SD card reader for laptops', '2024-03-12');
+INSERT INTO CustomerTier (id, name) VALUES (1, 'Bronze');
+INSERT INTO CustomerTier (id, name) VALUES (2, 'Silver');
+INSERT INTO CustomerTier (id, name) VALUES (3, 'Gold');
+INSERT INTO CustomerTier (id, name) VALUES (4, 'Platinum');

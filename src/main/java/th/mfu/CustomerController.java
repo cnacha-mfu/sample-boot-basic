@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +27,9 @@ public class CustomerController {
 
     @Autowired
     private SaleOrderRepository orderRepo;
+
+    @Autowired
+    private CustomerTierRepository tierRepo;
 
     // GET for a customer
     @GetMapping("/customers/{id}")
@@ -62,8 +66,17 @@ public class CustomerController {
     // POST for creating a customer
     @PostMapping("/customers")
     public ResponseEntity<String> createCustomer(@RequestBody Customer customer){
+        // Handle CustomerTier association
+        if (customer.getCustomerTier() != null && customer.getCustomerTier().getId() != null) {
+            Optional<CustomerTier> tierOpt = tierRepo.findById(customer.getCustomerTier().getId());
+            if (tierOpt.isPresent()) {
+                customer.setCustomerTier(tierOpt.get());
+            } else {
+                return new ResponseEntity<>("CustomerTier with given ID not found", HttpStatus.BAD_REQUEST);
+            }
+        }
         custRepo.save(customer);
-        return new ResponseEntity<String>("Customer created", HttpStatus.CREATED);
+        return new ResponseEntity<>("Customer created with ID " + customer.getId(), HttpStatus.CREATED);
     }
 
     // DELETE for deleting a customer by id
@@ -73,4 +86,31 @@ public class CustomerController {
         return new ResponseEntity<String>("Customer deleted", HttpStatus.NO_CONTENT);
     }
 
+    // PUT to update a customer's tier
+    @PutMapping("/customers/{id}/tier")
+    public ResponseEntity<Customer> updateCustomerTier(@PathVariable Long id, @RequestBody Customer customerPayload) {
+        // 1. Validate and get tierId from payload
+        if (customerPayload.getCustomerTier() == null || customerPayload.getCustomerTier().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Long tierId = customerPayload.getCustomerTier().getId();
+
+        // 2. Find the customer
+        Optional<Customer> customerOpt = custRepo.findById(id);
+        if (customerOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 3. Find the new tier
+        Optional<CustomerTier> tierOpt = tierRepo.findById(tierId);
+        if (tierOpt.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        // 4. Update and save the customer
+        Customer customerToUpdate = customerOpt.get();
+        customerToUpdate.setCustomerTier(tierOpt.get());
+        final Customer updatedCustomer = custRepo.save(customerToUpdate);
+        return ResponseEntity.ok(updatedCustomer);
+    }
 }
