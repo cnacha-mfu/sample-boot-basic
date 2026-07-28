@@ -1,0 +1,783 @@
+{
+	"info": {
+		"_postman_id": "b7f1c2a4-3d5e-4a90-9c11-2e6f8a4d5b31",
+		"name": "Library API (JPA + MySQL sample)",
+		"description": "Demo collection for the Spring Boot JPA sample that comes before the lab-web-data lab.\n\nBefore you start:\n1. MySQL is running, and spring_db / spring_user exist.\n2. The app is running:  mvn spring-boot:run\n\nThe API key header is set once on the collection (Authorization tab), so every request inherits it. Only 'No API key' overrides it, to show what happens without it.\n\nRun the folders top to bottom. The Transactions folder tells a story: member 2 borrows book 3, cannot borrow it twice, and then returns it.\n\nVariables: baseUrl and apikey are on the collection - change them there, not in each request.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{ "key": "key", "value": "apikey", "type": "string" },
+			{ "key": "value", "value": "{{apikey}}", "type": "string" },
+			{ "key": "in", "value": "header", "type": "string" }
+		]
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080/api", "type": "string" },
+		{ "key": "apikey", "value": "123456", "type": "string" },
+		{ "key": "newBookId", "value": "", "type": "string" }
+	],
+	"item": [
+		{
+			"name": "1. Books",
+			"description": "Plain CRUD, but every call now goes to MySQL through BookRepository.",
+			"item": [
+				{
+					"name": "List all books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"10 books came from the database\", () => {",
+									"    pm.expect(pm.response.json().length).to.eql(10);",
+									"});",
+									"pm.test(\"each book carries its category\", () => {",
+									"    pm.expect(pm.response.json()[0].category).to.be.an('object');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["books"]
+						},
+						"description": "GET /api/books -> bookRepository.findAll()\n\nThe nested \"category\" object in each book is the @ManyToOne relationship being followed for you."
+					},
+					"response": []
+				},
+				{
+					"name": "Find books by author (derived query)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"found Bill Karwin's book\", () => {",
+									"    pm.expect(pm.response.text()).to.include('SQL Antipatterns');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books?author=karwin",
+							"host": ["{{baseUrl}}"],
+							"path": ["books"],
+							"query": [{ "key": "author", "value": "karwin" }]
+						},
+						"description": "Runs findByAuthorContainingIgnoreCase(...).\n\nNobody wrote that SQL - Spring Data generated it from the METHOD NAME. Watch the console: WHERE lower(author) like ?"
+					},
+					"response": []
+				},
+				{
+					"name": "Get book by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is Effective Java\", () => {",
+									"    pm.expect(pm.response.json().title).to.eql('Effective Java');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["books", "1"]
+						},
+						"description": "GET /api/books/1 -> bookRepository.findById(1)\n\nfindById returns an Optional, because the row may not exist."
+					},
+					"response": []
+				},
+				{
+					"name": "Get book by id - not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books/999",
+							"host": ["{{baseUrl}}"],
+							"path": ["books", "999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+									"",
+									"// The response is plain text: \"Book created with ID: 11\".",
+									"// Grab that id so the update and delete below can use it.",
+									"const id = pm.response.text().match(/(\\d+)\\s*$/);",
+									"if (id) {",
+									"    pm.collectionVariables.set('newBookId', id[1]);",
+									"    console.log('new book id = ' + id[1]);",
+									"}",
+									"",
+									"pm.test(\"the database assigned an id\", () => {",
+									"    pm.expect(pm.collectionVariables.get('newBookId')).to.not.eql('');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Refactoring\",\n    \"author\": \"Martin Fowler\",\n    \"publish-year\": 2019,\n    \"category\": { \"id\": 1 }\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["books"]
+						},
+						"description": "Two things to notice.\n\n1. There is no \"id\" in the body. @GeneratedValue(IDENTITY) means MySQL makes it, and Hibernate reads it back.\n\n2. The category is sent as a nested object holding only an id: { \"id\": 1 }. That is a placeholder - the controller loads the real Category row before saving.\n\n3. \"publish-year\" is the JSON name; the field is called year and the column is year. That is @JsonProperty at work."
+					},
+					"response": []
+				},
+				{
+					"name": "Create book - unknown category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+									"pm.test(\"says which category is missing\", () => {",
+									"    pm.expect(pm.response.text()).to.include('No category with ID: 99');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"A book in no category\",\n    \"author\": \"Nobody\",\n    \"publish-year\": 2001,\n    \"category\": { \"id\": 99 }\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["books"]
+						},
+						"description": "The foreign key must point at a row that exists. The controller checks first and explains, instead of letting MySQL throw a constraint violation."
+					},
+					"response": []
+				},
+				{
+					"name": "Update book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Refactoring, 2nd Edition\",\n    \"author\": \"Martin Fowler\",\n    \"publish-year\": 2019,\n    \"category\": { \"id\": 1 }\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/books/{{newBookId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["books", "{{newBookId}}"]
+						},
+						"description": "Uses the id captured by 'Create book'.\n\nsave() on an object that already has an id becomes an UPDATE instead of an INSERT - the same method does both."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books/{{newBookId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["books", "{{newBookId}}"]
+						},
+						"description": "bookRepository.deleteById(id). Run it twice: the second time gives 404."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Categories",
+			"description": "The @OneToMany / @ManyToOne relationship, seen from the web.",
+			"item": [
+				{
+					"name": "List all categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"3 categories\", () => pm.expect(pm.response.json().length).to.eql(3));",
+									"pm.test(\"books list is hidden by @JsonIgnore\", () => {",
+									"    pm.expect(pm.response.json()[0].books).to.be.undefined;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories"]
+						},
+						"description": "No \"books\" array appears here. Category.books is marked @JsonIgnore, otherwise category -> books -> category -> books would repeat forever."
+					},
+					"response": []
+				},
+				{
+					"name": "List books under a category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"3 books in Databases\", () => pm.expect(pm.response.json().length).to.eql(3));",
+									"pm.test(\"all of them really are category 2\", () => {",
+									"    pm.response.json().forEach(b => pm.expect(b.category.id).to.eql(2));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/2/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories", "2", "books"]
+						},
+						"description": "GET /api/categories/{id}/books, straight from library-design.md.\n\nRuns bookRepository.findByCategoryId(2) -> WHERE category_id = 2.\n\nThe same answer could come from category.getBooks(), following the @OneToMany. Both are correct; the derived query is one clean SELECT."
+					},
+					"response": []
+				},
+				{
+					"name": "List books under a category - not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/99/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories", "99", "books"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mathematics\",\n    \"description\": \"Calculus, algebra and statistics\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Members",
+			"item": [
+				{
+					"name": "List all members",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"3 members\", () => pm.expect(pm.response.json().length).to.eql(3));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/members",
+							"host": ["{{baseUrl}}"],
+							"path": ["members"]
+						},
+						"description": "These rows live in the table library_member, not member - MEMBER is a reserved word in MySQL 8. @Table(name = \"library_member\") is what connects the class to it."
+					},
+					"response": []
+				},
+				{
+					"name": "Get member by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"it is Somchai\", () => {",
+									"    pm.expect(pm.response.json().name).to.eql('Somchai Jaidee');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/members/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["members", "1"]
+						},
+						"description": "GET /api/members/{id}, straight from library-design.md."
+					},
+					"response": []
+				},
+				{
+					"name": "Create member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nida Chaiyaporn\",\n    \"email\": \"nida@mfu.ac.th\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/members",
+							"host": ["{{baseUrl}}"],
+							"path": ["members"]
+						},
+						"description": "joinDate is left out on purpose - the controller fills in today's date."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Borrow and return",
+			"description": "Run these in order - they tell one story.\n\nMember 2 borrows book 3, someone tries to borrow it again, someone tries to return a book they did not borrow, and finally member 2 returns it properly.",
+			"item": [
+				{
+					"name": "Step 1 - member 2 borrows book 3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+									"const t = pm.response.json();",
+									"pm.test(\"it is a borrow\", () => pm.expect(t.type).to.eql('borrow'));",
+									"pm.test(\"both sides were loaded from the database\", () => {",
+									"    pm.expect(t.book.title).to.eql('Spring in Action');",
+									"    pm.expect(t.member.name).to.eql('Malee Rakdee');",
+									"});",
+									"pm.test(\"the database assigned an id\", () => pm.expect(t.id).to.be.a('number'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 3 },\n    \"type\": \"borrow\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/members/2/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["members", "2", "transactions"]
+						},
+						"description": "POST /api/members/{id}/transactions, from library-design.md.\n\nThe member comes from the URL, so the body only names the book.\n\nThe book is sent as a nested object with just an id. Jackson builds a placeholder Book from it; the controller replaces it with the real row before saving. The reply shows the full book and member, because the saved entity holds real objects, not ids."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 2 - borrow it again (refused)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+									"pm.test(\"explains why\", () => {",
+									"    pm.expect(pm.response.text()).to.include('already borrowed');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 3 },\n    \"member\": { \"id\": 1 },\n    \"type\": \"borrow\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						},
+						"description": "POST /api/transactions - here the body names BOTH sides.\n\nTo decide, the controller runs findFirstByBookIdOrderByIdDesc(3): the newest row for that book is a 'borrow', so the book is still out."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 3 - wrong member returns it (refused)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+									"pm.test(\"names the real borrower\", () => {",
+									"    pm.expect(pm.response.text()).to.include('borrowed by member 2');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 3 },\n    \"member\": { \"id\": 1 },\n    \"type\": \"return\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						},
+						"description": "The check walks from the transaction to its member (latest.getMember().getId()) - following a @ManyToOne in Java, with no SQL written by hand."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 4 - member 2 returns it (works)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+									"pm.test(\"it is a return\", () => pm.expect(pm.response.json().type).to.eql('return'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 3 },\n    \"member\": { \"id\": 2 },\n    \"type\": \"return\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 5 - member 2's history",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"the borrow and the return are both there\", () => {",
+									"    const types = pm.response.json().map(t => t.type);",
+									"    pm.expect(types).to.include('borrow');",
+									"    pm.expect(types).to.include('return');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/members/2/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["members", "2", "transactions"]
+						},
+						"description": "findByMemberId(2) -> WHERE member_id = 2.\n\nA derived query that reaches through the @ManyToOne field 'member' down to its id."
+					},
+					"response": []
+				},
+				{
+					"name": "List all transactions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						},
+						"description": "Each row shows its book AND its member: the two @ManyToOne relationships, followed for you."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. When things go wrong",
+			"description": "Useful to demo: the API explains the problem instead of returning a bare 500.",
+			"item": [
+				{
+					"name": "Invalid type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+									"pm.test(\"lists the allowed values\", () => {",
+									"    pm.expect(pm.response.text()).to.include(\"must be 'borrow' or 'return'\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 1 },\n    \"member\": { \"id\": 1 },\n    \"type\": \"steal\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Missing book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"member\": { \"id\": 1 },\n    \"type\": \"borrow\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unknown book id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));",
+									"pm.test(\"says which id\", () => {",
+									"    pm.expect(pm.response.text()).to.include('No book with ID: 999');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"book\": { \"id\": 999 },\n    \"member\": { \"id\": 1 },\n    \"type\": \"borrow\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["transactions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "No API key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"403 Forbidden\", () => pm.response.to.have.status(403));",
+									"pm.test(\"security blocked it before the controller ran\", () => {",
+									"    pm.expect(pm.response.text()).to.not.include('Effective Java');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["books"]
+						},
+						"description": "This request overrides the collection auth with 'No Auth', so no apikey header is sent.\n\nAPIKeyAuthFilter rejects it before BookController is reached - nothing touches the database."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
