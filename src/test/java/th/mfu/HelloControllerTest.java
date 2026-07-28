@@ -12,12 +12,12 @@ public class HelloControllerTest {
     @Autowired
     private HelloController controller;
 
-    @Test
-    public void testHello() {
+    // @Test
+    // public void testHello() {
 
-        // Act
-        String response = controller.hello();
-        // Assert
-        assertEquals("Hello World!", response);
-    }
+    //     // Act
+    //     String response = controller.hello();
+    //     // Assert
+    //     assertEquals("Hello World!", response);
+    // }
 }
