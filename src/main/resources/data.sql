@@ -1,0 +1,15 @@
+INSERT INTO category (id, name, description) VALUES (10001, 'Fiction', 'Literary works created from the imagination, not presented as fact.');
+INSERT INTO category (id, name, description) VALUES (10002, 'Science Fiction', 'Speculative fiction exploring futuristic concepts, space, and technology.');
+INSERT INTO category (id, name, description) VALUES (10003, 'Non-Fiction', 'Prose writing based on real facts, real events, and real people.');
+INSERT INTO category (id, name, description) VALUES (10004, 'Biography', 'Detailed descriptions of a person life written by another author.');
+INSERT INTO category (id, name, description) VALUES (10005, 'History', 'Books detailing real historical events, eras, and human societies.');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10001, 'To Kill a Mockingbird', 'Harper Lee', 1960, '2026-01-10');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10002, '1984', 'George Orwell', 1949, '2026-01-15');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10003, 'The Great Gatsby', 'F. Scott Fitzgerald', 1925, '2026-02-01');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10004, 'One Hundred Years of Solitude', 'Gabriel García Márquez', 1967, '2026-02-14');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10005, 'Pride and Prejudice', 'Jane Austen', 1813, '2026-03-05');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10006, 'The Catcher in the Rye', 'J.D. Salinger', 1951, '2026-03-20');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10007, 'The Hobbit', 'J.R.R. Tolkien', 1937, '2026-04-12');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10008, 'Fahrenheit 451', 'Ray Bradbury', 1953, '2026-05-01');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10009, 'Brave New World', 'Aldous Huxley', 1932, '2026-06-18');
+INSERT INTO book (id, title, author, year, addedDate) VALUES (10010, 'Beloved', 'Toni Morrison', 1987, '2026-07-04');
