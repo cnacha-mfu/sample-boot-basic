@@ -429,6 +429,7 @@ lab's own README:
 | `Field bookMapper ... required a bean of type 'BookMapper'` | MapStruct did not run. Check `annotationProcessorPaths` in the top pom, then `mvn clean install` |
 | `blocked by CORS policy` in the browser console | `WebConfig` is missing, or the page is not on port 8081 |
 | `Connection refused` on port 8080 | The web service is not running |
+| `Could not figure out if the application has started ... MBean server at port 9001` | You left `spring-boot:run` running. `mvn verify` starts its **own** copy on 8080, so stop the other one first |
 | PATCH wipes the other fields | `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` is missing, or a DTO field is a primitive (`int` instead of `Integer`) |
 | The integration test runs during `mvn test` and fails | The file is named `*Test`; it must be `*IT` |
 | `Communications link failure` | MySQL is not running |

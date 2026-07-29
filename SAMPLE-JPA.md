@@ -1,5 +1,17 @@
 # Sample: JPA + MySQL (read this before the lab)
 
+> **Note for day 4.** This page describes the project as it was on the
+> `spring-jpa-day3` branch: one module, everything under `src/main/java/th/mfu/`,
+> every path prefixed with `/api` and protected by an API key.
+>
+> On this branch the project has been split into three modules and given a DTO
+> layer, so the file paths and endpoints below have moved. The JPA ideas are
+> unchanged and still worth reading first — then go to
+> [SAMPLE-3TIER.md](SAMPLE-3TIER.md) to see where everything went.
+>
+> The Postman collection for this page lives on the `spring-jpa-day3` branch;
+> use `postman/library-3tier.postman_collection.json` here.
+
 This is a worked example of everything you will be asked to do in the lab
 [lab-web-data](https://github.com/camtdii/lab-web-data). The lab gives you classes
 with `//TODO:` comments and empty annotations. Here, the same annotations are
