@@ -13,3 +13,13 @@ INSERT INTO book (id, title, author, year, addedDate) VALUES (10007, 'The Hobbit
 INSERT INTO book (id, title, author, year, addedDate) VALUES (10008, 'Fahrenheit 451', 'Ray Bradbury', 1953, '2026-05-01');
 INSERT INTO book (id, title, author, year, addedDate) VALUES (10009, 'Brave New World', 'Aldous Huxley', 1932, '2026-06-18');
 INSERT INTO book (id, title, author, year, addedDate) VALUES (10010, 'Beloved', 'Toni Morrison', 1987, '2026-07-04');
+INSERT INTO member (id, name, email) VALUES (1, 'Alice Johnson', 'alice.johnson@example.com');
+INSERT INTO member (id, name, email) VALUES (2, 'Bob Smith', 'bob.smith@example.com');
+INSERT INTO member (id, name, email) VALUES (3, 'Charlie Brown', 'charlie.brown@example.com');
+INSERT INTO member (id, name, email) VALUES (4, 'Diana Prince', 'diana.prince@example.com');
+INSERT INTO member (id, name, email) VALUES (5, 'Evan Wright', 'evan.wright@example.com');
+INSERT INTO member (id, name, email) VALUES (6, 'Fiona Gallagher', 'fiona.gallagher@example.com');
+INSERT INTO member (id, name, email) VALUES (7, 'George Clark', 'george.clark@example.com');
+INSERT INTO member (id, name, email) VALUES (8, 'Hannah Abbott', 'hannah.abbott@example.com');
+INSERT INTO member (id, name, email) VALUES (9, 'Ian Malcolm', 'ian.malcolm@example.com');
+INSERT INTO member (id, name, email) VALUES (10, 'Julia Roberts', 'julia.roberts@example.com');
