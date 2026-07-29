@@ -9,15 +9,16 @@ list all books GET /books
 list all book under categories GET /categories/{id}/books
 get members GET /members/{id}
 borrow/return  POST /members/{id}/transactions
-    {book: {id: ...},
+    {book_id: ....
     type: borrow/return}
 
 
 
     POST /transactions
-    {book: {id:...}, member: {id:...}, type...}
+    {book_id:..., member_id:...., type...}
 
 
-note: the related object is sent as a nested object holding only its id
-({"book": {"id": 3}}), not as book_id. That is what Jackson needs to build the
-Transaction entity, which holds a Book object rather than a number.
+note: this is the shape the service really answers with now that there are DTOs.
+In the JPA sample the entity itself was the request body, so the client had to
+send a nested {"book": {"id": 3}} instead. Adding TransactionDTO put the wire
+format back under our control - which is the whole argument for the pattern.
