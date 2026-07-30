@@ -20,6 +20,6 @@ public interface MemberMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "transactions", ignore = true)
+    @Mapping(target = "name", ignore = true)
     void updateMemberFromDto(MemberDTO dto, @MappingTarget Member entity);
 }
