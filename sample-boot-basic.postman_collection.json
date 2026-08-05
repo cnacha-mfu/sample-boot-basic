@@ -1,0 +1,194 @@
+{
+	"info": {
+		"name": "sample-boot-basic",
+		"description": "In-class demo requests for the Spring Boot basics demo (covers what lab-web-boot needs).\n\nStart the app first: mvn spring-boot:run\n\nRun the requests top to bottom — or use 'Run collection' to execute the whole flow; every request carries tests that check the expected status code.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Step 1 - Hello World",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"body is Hello World!\", () => pm.expect(pm.response.text()).to.eql(\"Hello World!\"));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/api/hello"
+			}
+		},
+		{
+			"name": "Step 2 - Hello with path variable",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"greeting contains the name\", () => pm.expect(pm.response.text()).to.include(\"Nacha\"));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/api/hello/Nacha"
+			}
+		},
+		{
+			"name": "Step 4 - Register a student (201 CREATED)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 201 CREATED\", () => pm.response.to.have.status(201));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": \"6531501001\",\n  \"name\": \"Alice\",\n  \"email\": \"alice@lamduan.mfu.ac.th\"\n}"
+				},
+				"url": "{{baseUrl}}/students"
+			}
+		},
+		{
+			"name": "Step 4 - Register duplicate id (409 CONFLICT)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 409 CONFLICT\", () => pm.response.to.have.status(409));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": \"6531501001\",\n  \"name\": \"Alice Again\",\n  \"email\": \"alice2@lamduan.mfu.ac.th\"\n}"
+				},
+				"url": "{{baseUrl}}/students"
+			}
+		},
+		{
+			"name": "Step 4 - Register a second student (201 CREATED)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 201 CREATED\", () => pm.response.to.have.status(201));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": \"6531501002\",\n  \"name\": \"Bob\",\n  \"email\": \"bob@lamduan.mfu.ac.th\"\n}"
+				},
+				"url": "{{baseUrl}}/students"
+			}
+		},
+		{
+			"name": "Step 5 - Get one student (200 OK)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 200 OK\", () => pm.response.to.have.status(200));",
+							"pm.test(\"returns Alice\", () => pm.expect(pm.response.json().name).to.eql(\"Alice\"));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/students/6531501001"
+			}
+		},
+		{
+			"name": "Step 5 - Get unknown student (404 NOT FOUND)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 404 NOT FOUND\", () => pm.response.to.have.status(404));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/students/nobody"
+			}
+		},
+		{
+			"name": "Step 5 - List all students (200 OK)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"status is 200 OK\", () => pm.response.to.have.status(200));",
+							"pm.test(\"two students registered\", () => pm.expect(pm.response.json().length).to.eql(2));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/students"
+			}
+		}
+	]
+}

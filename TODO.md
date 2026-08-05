@@ -13,6 +13,8 @@ mvn spring-boot:run
 
 Then open <http://localhost:8080/api/hello> to check it is alive. Follow the steps in order; each one adds a single new idea.
 
+> **Postman:** import [`sample-boot-basic.postman_collection.json`](sample-boot-basic.postman_collection.json) (File → Import, or drag the file in). It contains every request used below, in order, with tests that check the expected status codes — *Run collection* replays the whole flow. Restart the app first if you want a clean (empty) student list.
+
 ---
 
 ## Step 1: Anatomy of a Spring Boot app
