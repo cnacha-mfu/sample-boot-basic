@@ -18,24 +18,26 @@ public class StudentController {
     // the "database" for today: key = student id, value = the student
     public static Map<String, Student> students = new HashMap<String, Student>();
 
-    // TODO: add @PostMapping("/students") and @RequestBody on the parameter
-    public ResponseEntity<String> registerStudent(Student student) {
-        // TODO: if the id already exists in the map, return 409 CONFLICT
-        // TODO: otherwise put the student in the map and return 201 CREATED
-        return null;
+    @PostMapping("/students")
+    public ResponseEntity<String> registerStudent(@RequestBody Student student) {
+        if (students.containsKey(student.getId())) {
+            return new ResponseEntity<>("Student id already exists", HttpStatus.CONFLICT);
+        }
+        students.put(student.getId(), student);
+        return new ResponseEntity<>("Student registered successfully", HttpStatus.CREATED);
     }
 
-    // TODO: add @GetMapping("/students/{id}") and @PathVariable on the parameter
-    public ResponseEntity<Student> getStudent(String id) {
-        // TODO: if the id is not in the map, return 404 NOT FOUND
-        // TODO: otherwise return the student with 200 OK
-        return null;
+    @GetMapping("/students/{id}")
+    public ResponseEntity<Student> getStudent(@PathVariable String id) {
+        if (!students.containsKey(id)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(students.get(id), HttpStatus.OK);
     }
 
-    // TODO: add @GetMapping("/students")
+    @GetMapping("/students")
     public ResponseEntity<Collection<Student>> listStudents() {
-        // TODO: return all values in the map with 200 OK
-        return null;
+        return new ResponseEntity<>(students.values(), HttpStatus.OK);
     }
 
 }
