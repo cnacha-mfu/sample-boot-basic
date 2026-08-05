@@ -14,5 +14,10 @@ public class HelloController {
         return "Hello World!";
     }
 
-   
+    @GetMapping("/hello/{name}")
+    String helloName(@PathVariable String name) {
+        // TODO: return a greeting that includes the name from the URL
+        return "";
+    }
+
 }
